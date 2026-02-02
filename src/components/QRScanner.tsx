@@ -152,7 +152,7 @@ export default function QRScanner({ onScan, onError }: QRScannerProps) {
         <div
           id="qr-reader"
           ref={containerRef}
-          className={`w-full rounded-2xl overflow-hidden bg-slate-900 ${isScanning ? 'block' : 'hidden'}`}
+          className={`w-full rounded-2xl overflow-hidden bg-slate-900 qr-scanner-container ${isScanning ? 'block' : 'hidden'}`}
           style={{ minHeight: isScanning ? '350px' : '0' }}
         />
 
@@ -254,14 +254,53 @@ export default function QRScanner({ onScan, onError }: QRScannerProps) {
         </div>
       )}
 
-      {/* Custom CSS for scan animation */}
-      <style jsx>{`
+      {/* Custom CSS for scan animation and QR scanner */}
+      <style jsx global>{`
         @keyframes scan {
           0%, 100% { top: 10%; }
           50% { top: 90%; }
         }
         .animate-scan {
           animation: scan 2s ease-in-out infinite;
+        }
+
+        /* html5-qrcode library styles */
+        #qr-reader {
+          width: 100% !important;
+          border: none !important;
+        }
+        #qr-reader video {
+          width: 100% !important;
+          height: auto !important;
+          border-radius: 1rem;
+          object-fit: cover;
+        }
+        #qr-reader__scan_region {
+          min-height: 300px;
+        }
+        #qr-reader__scan_region video {
+          border-radius: 1rem;
+        }
+        #qr-reader__dashboard {
+          display: none !important;
+        }
+        #qr-reader__dashboard_section {
+          display: none !important;
+        }
+        #qr-reader__dashboard_section_swaplink {
+          display: none !important;
+        }
+        #qr-reader__status_span {
+          display: none !important;
+        }
+        #qr-reader__camera_selection {
+          display: none !important;
+        }
+        #qr-reader img {
+          display: none !important;
+        }
+        #qr-reader__scan_region > br {
+          display: none !important;
         }
       `}</style>
     </div>
