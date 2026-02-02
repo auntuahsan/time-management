@@ -11,27 +11,93 @@ interface QRScannerProps {
 export default function QRScanner({ onScan, onError }: QRScannerProps) {
   const [isScanning, setIsScanning] = useState(false);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string>('');
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  const checkCameraPermission = async (): Promise<boolean> => {
+    try {
+      // Check if mediaDevices is available
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        setErrorMessage('Camera is not supported on this browser. Please use Safari or Chrome.');
+        return false;
+      }
+
+      // Request camera permission
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: 'environment',
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        }
+      });
+
+      // Stop the stream immediately after getting permission
+      stream.getTracks().forEach(track => track.stop());
+
+      return true;
+    } catch (err) {
+      console.error('Camera permission error:', err);
+
+      if (err instanceof Error) {
+        if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+          setErrorMessage('Camera permission denied. Please allow camera access in your browser settings and refresh the page.');
+        } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+          setErrorMessage('No camera found on this device.');
+        } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
+          setErrorMessage('Camera is being used by another application. Please close other apps using the camera.');
+        } else if (err.name === 'OverconstrainedError') {
+          setErrorMessage('Camera constraints not satisfied. Trying with different settings...');
+          // Try with basic constraints
+          try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            stream.getTracks().forEach(track => track.stop());
+            return true;
+          } catch {
+            setErrorMessage('Unable to access camera with any settings.');
+          }
+        } else {
+          setErrorMessage(`Camera error: ${err.message}`);
+        }
+      }
+
+      return false;
+    }
+  };
+
   const startScanner = async () => {
     if (!containerRef.current) return;
+
+    setErrorMessage('');
+
+    // First check/request camera permission
+    const hasAccess = await checkCameraPermission();
+    if (!hasAccess) {
+      setHasPermission(false);
+      if (onError) {
+        onError(errorMessage || 'Failed to access camera.');
+      }
+      return;
+    }
 
     try {
       const html5QrCode = new Html5Qrcode('qr-reader');
       scannerRef.current = html5QrCode;
 
+      const config = {
+        fps: 10,
+        qrbox: { width: 250, height: 250 },
+        aspectRatio: 1.0,
+      };
+
       await html5QrCode.start(
         { facingMode: 'environment' },
-        {
-          fps: 10,
-          qrbox: { width: 250, height: 250 },
-        },
+        config,
         (decodedText) => {
           onScan(decodedText);
           stopScanner();
         },
-        () => {}
+        () => {} // Ignore QR not found errors
       );
 
       setIsScanning(true);
@@ -39,8 +105,21 @@ export default function QRScanner({ onScan, onError }: QRScannerProps) {
     } catch (err) {
       console.error('Scanner error:', err);
       setHasPermission(false);
+
+      let message = 'Failed to start camera.';
+      if (err instanceof Error) {
+        if (err.message.includes('Permission')) {
+          message = 'Camera permission denied. Please allow camera access and try again.';
+        } else if (err.message.includes('NotFound')) {
+          message = 'No camera found. Please ensure your device has a camera.';
+        } else {
+          message = `Camera error: ${err.message}`;
+        }
+      }
+
+      setErrorMessage(message);
       if (onError) {
-        onError('Failed to start camera. Please ensure camera permissions are granted.');
+        onError(message);
       }
     }
   };
@@ -126,9 +205,16 @@ export default function QRScanner({ onScan, onError }: QRScannerProps) {
             <div>
               <h4 className="font-semibold text-red-800">Camera Access Required</h4>
               <p className="mt-1 text-sm text-red-600">
-                Please allow camera access in your browser settings to scan QR codes.
-                You may need to refresh the page after granting permission.
+                {errorMessage || 'Please allow camera access in your browser settings to scan QR codes.'}
               </p>
+              <div className="mt-3 p-3 bg-red-100 rounded-lg">
+                <p className="text-xs text-red-700 font-medium mb-2">On iPhone/iPad:</p>
+                <ol className="text-xs text-red-600 space-y-1 list-decimal list-inside">
+                  <li>Go to Settings → Safari → Camera</li>
+                  <li>Select &quot;Allow&quot;</li>
+                  <li>Refresh this page and try again</li>
+                </ol>
+              </div>
             </div>
           </div>
         </div>
