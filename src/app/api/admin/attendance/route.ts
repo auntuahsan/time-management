@@ -26,6 +26,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');
+    const userId = searchParams.get('userId');
 
     const whereClause: Record<string, unknown> = {};
 
@@ -35,13 +36,18 @@ export async function GET(request: NextRequest) {
       };
     }
 
+    if (userId) {
+      whereClause.userId = userId;
+    }
+
     const records = await Attendance.findAll({
       where: whereClause,
       include: [
         {
           model: User,
           as: 'user',
-          attributes: ['username', 'email'],
+          attributes: ['id', 'username', 'email'],
+          required: false,
         },
       ],
       order: [['date', 'DESC'], ['checkInTime', 'DESC']],

@@ -1,6 +1,6 @@
 import { DataTypes, Model, Optional } from 'sequelize';
 import sequelize from '../db';
-import User from './User';
+import type User from './User';
 
 interface AttendanceAttributes {
   id: string;
@@ -67,9 +67,5 @@ Attendance.init(
     ],
   }
 );
-
-// Associations
-Attendance.belongsTo(User, { foreignKey: 'userId', as: 'user' });
-User.hasMany(Attendance, { foreignKey: 'userId', as: 'attendances' });
 
 export default Attendance;

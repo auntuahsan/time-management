@@ -4,9 +4,8 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import StatsCard from '@/components/StatsCard';
 import { AttendanceWithUser, User } from '@/types';
-import Link from 'next/link';
 
-export default function AdminPage() {
+export default function ReportPage() {
   const { token, user } = useAuth();
   const [records, setRecords] = useState<AttendanceWithUser[]>([]);
   const [employees, setEmployees] = useState<User[]>([]);
@@ -175,17 +174,6 @@ export default function AdminPage() {
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Report</h1>
           <p className="mt-1 text-slate-500">View attendance reports and export data</p>
-        </div>
-        <div className="flex gap-3">
-          <Link
-            href="/admin/qr-display"
-            className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700"
-          >
-            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5z" />
-            </svg>
-            QR Display
-          </Link>
         </div>
       </div>
 

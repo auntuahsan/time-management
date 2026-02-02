@@ -10,7 +10,7 @@ const navigation = [
 ];
 
 const adminNavigation = [
-  { name: 'Admin Panel', href: '/admin', icon: ChartIcon },
+  { name: 'Report', href: '/report', icon: ChartIcon },
   { name: 'User Management', href: '/admin/users', icon: UsersIcon },
   { name: 'QR Display', href: '/admin/qr-display', icon: DisplayIcon },
 ];
@@ -61,6 +61,14 @@ function LogoutIcon({ className }: { className?: string }) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
       <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+    </svg>
+  );
+}
+
+function ProfileIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z" />
     </svg>
   );
 }
@@ -128,7 +136,14 @@ export default function Sidebar() {
 
       {/* User Section */}
       <div className="border-t border-slate-800 p-4">
-        <div className="flex items-center gap-3 rounded-lg bg-slate-800/50 px-3 py-3">
+        <Link
+          href="/profile"
+          className={`flex items-center gap-3 rounded-lg px-3 py-3 transition-colors ${
+            isActive('/profile')
+              ? 'bg-indigo-600'
+              : 'bg-slate-800/50 hover:bg-slate-800'
+          }`}
+        >
           <div className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-600 text-sm font-medium text-white">
             {user?.username?.charAt(0).toUpperCase()}
           </div>
@@ -136,10 +151,10 @@ export default function Sidebar() {
             <p className="truncate text-sm font-medium text-white">{user?.username}</p>
             <p className="truncate text-xs text-slate-400">{user?.role}</p>
           </div>
-        </div>
+        </Link>
         <button
           onClick={logout}
-          className="mt-3 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-400 transition-colors hover:bg-slate-800 hover:text-white"
+          className="mt-2 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-400 transition-colors hover:bg-slate-800 hover:text-white"
         >
           <LogoutIcon className="h-5 w-5" />
           Sign out

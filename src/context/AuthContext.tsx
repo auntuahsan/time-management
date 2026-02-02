@@ -7,6 +7,7 @@ interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<void>;
   register: (username: string, email: string, password: string) => Promise<void>;
   logout: () => void;
+  setUser: (user: User) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -122,8 +123,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
   };
 
+  const setUser = (user: User) => {
+    setState((prev) => ({ ...prev, user }));
+  };
+
   return (
-    <AuthContext.Provider value={{ ...state, login, register, logout }}>
+    <AuthContext.Provider value={{ ...state, login, register, logout, setUser }}>
       {children}
     </AuthContext.Provider>
   );

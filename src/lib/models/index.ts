@@ -2,6 +2,10 @@ import sequelize from '../db';
 import User from './User';
 import Attendance from './Attendance';
 
+// Setup associations
+Attendance.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+User.hasMany(Attendance, { foreignKey: 'userId', as: 'attendances' });
+
 const syncDatabase = async () => {
   try {
     await sequelize.authenticate();
