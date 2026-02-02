@@ -18,16 +18,22 @@ async function startServer() {
   console.log(`Database: ${process.env.DB_NAME}`);
   console.log(`User: ${process.env.DB_USER}\n`);
 
-  // Prompt for password
-  const dbPassword = await promptPassword('Enter database password: ');
+  let dbPassword = process.env.DB_PASSWORD;
 
+  // Only prompt for password if not already set (development mode)
   if (!dbPassword) {
-    console.error('❌ Database password is required');
-    process.exit(1);
-  }
+    dbPassword = await promptPassword('Enter database password: ');
 
-  // Set password in environment for the app to use
-  process.env.DB_PASSWORD = dbPassword;
+    if (!dbPassword) {
+      console.error('❌ Database password is required');
+      process.exit(1);
+    }
+
+    // Set password in environment for the app to use
+    process.env.DB_PASSWORD = dbPassword;
+  } else {
+    console.log('Using password from environment\n');
+  }
 
   // Test database connection before starting
   const { Sequelize } = await import('sequelize');
