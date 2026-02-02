@@ -65,101 +65,131 @@ function LogoutIcon({ className }: { className?: string }) {
   );
 }
 
-function ProfileIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z" />
-    </svg>
-  );
+interface SidebarProps {
+  isOpen: boolean;
+  onClose: () => void;
 }
 
-export default function Sidebar() {
+export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
 
   const isActive = (href: string) => pathname === href;
 
-  return (
-    <div className="flex h-screen w-64 flex-col bg-slate-900">
-      {/* Logo */}
-      <div className="flex h-16 items-center gap-2 px-6 border-b border-slate-800">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600">
-          <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        </div>
-        <span className="text-lg font-semibold text-white">TimeTrack</span>
-      </div>
+  const handleLinkClick = () => {
+    onClose();
+  };
 
-      {/* Navigation */}
-      <nav className="flex-1 space-y-1 px-3 py-4">
-        <div className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
-          Main
+  return (
+    <>
+      {/* Mobile overlay */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+          onClick={onClose}
+        />
+      )}
+
+      {/* Sidebar */}
+      <div
+        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-slate-900 transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 ${
+          isOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
+        {/* Logo */}
+        <div className="flex h-16 items-center justify-between gap-2 px-6 border-b border-slate-800">
+          <div className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600">
+              <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <span className="text-lg font-semibold text-white">TimeTrack</span>
+          </div>
+          {/* Close button for mobile */}
+          <button
+            onClick={onClose}
+            className="rounded-lg p-1 text-slate-400 hover:bg-slate-800 hover:text-white lg:hidden"
+          >
+            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
-        {navigation.map((item) => (
+
+        {/* Navigation */}
+        <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto">
+          <div className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
+            Main
+          </div>
+          {navigation.map((item) => (
+            <Link
+              key={item.name}
+              href={item.href}
+              onClick={handleLinkClick}
+              className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+                isActive(item.href)
+                  ? 'bg-indigo-600 text-white'
+                  : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+              }`}
+            >
+              <item.icon className="h-5 w-5" />
+              {item.name}
+            </Link>
+          ))}
+
+          {user?.role === 'admin' && (
+            <>
+              <div className="mb-2 mt-6 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                Administration
+              </div>
+              {adminNavigation.map((item) => (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  onClick={handleLinkClick}
+                  className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+                    isActive(item.href)
+                      ? 'bg-indigo-600 text-white'
+                      : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                  }`}
+                >
+                  <item.icon className="h-5 w-5" />
+                  {item.name}
+                </Link>
+              ))}
+            </>
+          )}
+        </nav>
+
+        {/* User Section */}
+        <div className="border-t border-slate-800 p-4">
           <Link
-            key={item.name}
-            href={item.href}
-            className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
-              isActive(item.href)
-                ? 'bg-indigo-600 text-white'
-                : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+            href="/profile"
+            onClick={handleLinkClick}
+            className={`flex items-center gap-3 rounded-lg px-3 py-3 transition-colors ${
+              isActive('/profile')
+                ? 'bg-indigo-600'
+                : 'bg-slate-800/50 hover:bg-slate-800'
             }`}
           >
-            <item.icon className="h-5 w-5" />
-            {item.name}
-          </Link>
-        ))}
-
-        {user?.role === 'admin' && (
-          <>
-            <div className="mb-2 mt-6 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
-              Administration
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-600 text-sm font-medium text-white">
+              {user?.username?.charAt(0).toUpperCase()}
             </div>
-            {adminNavigation.map((item) => (
-              <Link
-                key={item.name}
-                href={item.href}
-                className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
-                  isActive(item.href)
-                    ? 'bg-indigo-600 text-white'
-                    : 'text-slate-400 hover:bg-slate-800 hover:text-white'
-                }`}
-              >
-                <item.icon className="h-5 w-5" />
-                {item.name}
-              </Link>
-            ))}
-          </>
-        )}
-      </nav>
-
-      {/* User Section */}
-      <div className="border-t border-slate-800 p-4">
-        <Link
-          href="/profile"
-          className={`flex items-center gap-3 rounded-lg px-3 py-3 transition-colors ${
-            isActive('/profile')
-              ? 'bg-indigo-600'
-              : 'bg-slate-800/50 hover:bg-slate-800'
-          }`}
-        >
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-600 text-sm font-medium text-white">
-            {user?.username?.charAt(0).toUpperCase()}
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="truncate text-sm font-medium text-white">{user?.username}</p>
-            <p className="truncate text-xs text-slate-400">{user?.role}</p>
-          </div>
-        </Link>
-        <button
-          onClick={logout}
-          className="mt-2 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-400 transition-colors hover:bg-slate-800 hover:text-white"
-        >
-          <LogoutIcon className="h-5 w-5" />
-          Sign out
-        </button>
+            <div className="flex-1 min-w-0">
+              <p className="truncate text-sm font-medium text-white">{user?.username}</p>
+              <p className="truncate text-xs text-slate-400">{user?.role}</p>
+            </div>
+          </Link>
+          <button
+            onClick={logout}
+            className="mt-2 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-400 transition-colors hover:bg-slate-800 hover:text-white"
+          >
+            <LogoutIcon className="h-5 w-5" />
+            Sign out
+          </button>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

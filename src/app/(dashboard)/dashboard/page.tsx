@@ -136,16 +136,16 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Welcome Section */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Welcome back, {user?.username}!</h1>
-          <p className="mt-1 text-slate-500">Here&apos;s your attendance overview</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Welcome back, {user?.username}!</h1>
+          <p className="mt-1 text-sm sm:text-base text-slate-500">Here&apos;s your attendance overview</p>
         </div>
         <Link
           href="/scan"
-          className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700"
+          className="inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700"
         >
           <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5z" />
@@ -205,8 +205,8 @@ export default function DashboardPage() {
       {/* Today's Status & Recent Activity */}
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Today's Status */}
-        <div className="rounded-xl bg-white p-6 shadow-sm border border-slate-200">
-          <h2 className="text-lg font-semibold text-slate-900">Today&apos;s Status</h2>
+        <div className="rounded-xl bg-white p-4 sm:p-6 shadow-sm border border-slate-200">
+          <h2 className="text-base sm:text-lg font-semibold text-slate-900">Today&apos;s Status</h2>
           <div className="mt-4">
             <span className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${statusInfo.color}`}>
               {statusInfo.status}
@@ -250,12 +250,12 @@ export default function DashboardPage() {
         </div>
 
         {/* Recent Activity */}
-        <div className="lg:col-span-2 rounded-xl bg-white p-6 shadow-sm border border-slate-200">
+        <div className="lg:col-span-2 rounded-xl bg-white p-4 sm:p-6 shadow-sm border border-slate-200">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-slate-900">Recent Activity</h2>
-            <span className="text-sm text-slate-500">Last 7 days</span>
+            <h2 className="text-base sm:text-lg font-semibold text-slate-900">Recent Activity</h2>
+            <span className="text-xs sm:text-sm text-slate-500">Last 7 days</span>
           </div>
-          <div className="mt-4 overflow-hidden">
+          <div className="mt-4 overflow-x-auto -mx-4 sm:mx-0">
             <table className="min-w-full">
               <thead>
                 <tr className="border-b border-slate-100">

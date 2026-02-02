@@ -168,12 +168,12 @@ export default function ReportPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Report</h1>
-          <p className="mt-1 text-slate-500">View attendance reports and export data</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Report</h1>
+          <p className="mt-1 text-sm sm:text-base text-slate-500">View attendance reports and export data</p>
         </div>
       </div>
 
@@ -210,9 +210,9 @@ export default function ReportPage() {
       </div>
 
       {/* Filters */}
-      <div className="rounded-xl bg-white p-6 shadow-sm border border-slate-200">
+      <div className="rounded-xl bg-white p-4 sm:p-6 shadow-sm border border-slate-200">
         <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-4">Filters & Export</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1.5">Start Date</label>
             <input
@@ -288,8 +288,8 @@ export default function ReportPage() {
 
       {/* Table */}
       <div className="rounded-xl bg-white shadow-sm border border-slate-200 overflow-hidden">
-        <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-slate-900">
+        <div className="px-4 sm:px-6 py-4 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <h2 className="text-base sm:text-lg font-semibold text-slate-900">
             Attendance Records ({filteredRecords.length})
             {selectedEmployee && (
               <span className="ml-2 text-sm font-normal text-indigo-600">

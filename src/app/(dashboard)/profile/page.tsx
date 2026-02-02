@@ -86,11 +86,11 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Profile Settings</h1>
-        <p className="mt-1 text-slate-500">Update your account information</p>
+        <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Profile Settings</h1>
+        <p className="mt-1 text-sm sm:text-base text-slate-500">Update your account information</p>
       </div>
 
       {/* Message */}
@@ -100,16 +100,16 @@ export default function ProfilePage() {
         </div>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
         {/* Profile Info Card */}
-        <div className="rounded-xl bg-white p-6 shadow-sm border border-slate-200">
-          <div className="flex items-center gap-4 mb-6">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-indigo-600 text-2xl font-bold text-white">
+        <div className="rounded-xl bg-white p-4 sm:p-6 shadow-sm border border-slate-200">
+          <div className="flex items-center gap-3 sm:gap-4 mb-6">
+            <div className="flex h-12 w-12 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-indigo-600 text-xl sm:text-2xl font-bold text-white">
               {user?.username?.charAt(0).toUpperCase()}
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-slate-900">{user?.username}</h2>
-              <p className="text-sm text-slate-500">{user?.email}</p>
+              <h2 className="text-base sm:text-lg font-semibold text-slate-900">{user?.username}</h2>
+              <p className="text-xs sm:text-sm text-slate-500 truncate max-w-[180px] sm:max-w-none">{user?.email}</p>
               <span className={`mt-1 inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${
                 user?.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'
               }`}>
@@ -120,7 +120,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Account Info Card */}
-        <div className="rounded-xl bg-white p-6 shadow-sm border border-slate-200">
+        <div className="rounded-xl bg-white p-4 sm:p-6 shadow-sm border border-slate-200">
           <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-4">Account Information</h3>
           <div className="space-y-3">
             <div className="flex justify-between">
@@ -144,7 +144,7 @@ export default function ProfilePage() {
       </div>
 
       {/* Update Form */}
-      <form onSubmit={handleUpdateProfile} className="rounded-xl bg-white p-6 shadow-sm border border-slate-200">
+      <form onSubmit={handleUpdateProfile} className="rounded-xl bg-white p-4 sm:p-6 shadow-sm border border-slate-200">
         <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-6">Update Profile</h3>
 
         <div className="grid gap-6 md:grid-cols-2">
