@@ -34,8 +34,9 @@ yarn-error.log*
 logs/*.log
 !logs/.gitkeep
 
-# local env files
+# env files (contain secrets)
 .env*.local
+.env.production
 
 # vercel
 .vercel
