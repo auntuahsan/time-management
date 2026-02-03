@@ -60,9 +60,9 @@ Attendance.init(
     timestamps: true,
     indexes: [
       {
-        unique: true,
+        // Non-unique index for faster queries
         fields: ['userId', 'date'],
-        name: 'unique_user_date',
+        name: 'idx_user_date',
       },
     ],
   }

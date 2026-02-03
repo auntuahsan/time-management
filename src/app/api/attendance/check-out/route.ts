@@ -42,25 +42,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Find today's attendance record (using local timezone)
+    // Find the latest open check-in for today (no check-out yet)
     const today = getLocalDate();
     const attendance = await Attendance.findOne({
       where: {
         userId: user.id,
         date: today,
+        checkOutTime: null,
       },
+      order: [['checkInTime', 'DESC']],
     });
 
     if (!attendance) {
       return NextResponse.json(
-        { error: 'No check-in record found for today. Please check in first.' },
-        { status: 400 }
-      );
-    }
-
-    if (attendance.checkOutTime) {
-      return NextResponse.json(
-        { error: 'Already checked out today' },
+        { error: 'No open check-in found. Please check in first.' },
         { status: 400 }
       );
     }

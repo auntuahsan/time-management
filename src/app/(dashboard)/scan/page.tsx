@@ -33,8 +33,11 @@ export default function ScanPage() {
       if (response.ok) {
         const data = await response.json();
         const today = new Date().toISOString().split('T')[0];
-        const todayRec = data.records.find((r: Attendance) => r.date === today);
-        setTodayRecord(todayRec || null);
+        // Find the latest open record (no checkout) for today
+        const openRecord = data.records.find((r: Attendance) => r.date === today && !r.checkOutTime);
+        // If no open record, check if there's any record today (for display purposes)
+        const latestTodayRecord = data.records.find((r: Attendance) => r.date === today);
+        setTodayRecord(openRecord || latestTodayRecord || null);
       }
     } catch (error) {
       console.error('Failed to fetch status:', error);
@@ -106,8 +109,9 @@ export default function ScanPage() {
     );
   }
 
-  const isCompleted = todayRecord?.checkOutTime;
+  // User is currently checked in if there's an open record (no checkout)
   const isCheckedIn = todayRecord && !todayRecord.checkOutTime;
+  // No longer have "completed" state - user can always check in again after checkout
 
   return (
     <div className="min-h-full">
@@ -137,18 +141,16 @@ export default function ScanPage() {
           {/* Status Pills */}
           <div className="mt-6 flex flex-wrap gap-3">
             <div className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium ${
-              isCompleted
-                ? 'bg-emerald-500/20 text-emerald-100'
-                : isCheckedIn
-                  ? 'bg-blue-500/20 text-blue-100'
-                  : 'bg-white/20 text-white'
+              isCheckedIn
+                ? 'bg-blue-500/20 text-blue-100'
+                : 'bg-white/20 text-white'
             }`}>
               <div className={`w-2 h-2 rounded-full ${
-                isCompleted ? 'bg-emerald-400' : isCheckedIn ? 'bg-blue-400 animate-pulse' : 'bg-white/60'
+                isCheckedIn ? 'bg-blue-400 animate-pulse' : 'bg-white/60'
               }`} />
-              {isCompleted ? 'Day Complete' : isCheckedIn ? 'Currently Working' : 'Not Checked In'}
+              {isCheckedIn ? 'Currently Working' : 'Ready to Check In'}
             </div>
-            {todayRecord && (
+            {isCheckedIn && todayRecord && (
               <div className="inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-2 text-sm font-medium text-white">
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -197,55 +199,34 @@ export default function ScanPage() {
           )}
 
           {/* Scanner Card */}
-          {!isCompleted ? (
-            <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center">
-                  <svg className="w-5 h-5 text-indigo-600" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5z" />
-                  </svg>
-                </div>
-                <div>
-                  <h2 className="text-lg font-semibold text-slate-900">
-                    {!todayRecord ? 'Check In' : 'Check Out'}
-                  </h2>
-                  <p className="text-sm text-slate-500">Scan the office QR code</p>
-                </div>
+          <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
+            <div className="flex items-center gap-3 mb-6">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isCheckedIn ? 'bg-red-100' : 'bg-emerald-100'}`}>
+                <svg className={`w-5 h-5 ${isCheckedIn ? 'text-red-600' : 'text-emerald-600'}`} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5z" />
+                </svg>
               </div>
+              <div>
+                <h2 className="text-lg font-semibold text-slate-900">
+                  {isCheckedIn ? 'Check Out' : 'Check In'}
+                </h2>
+                <p className="text-sm text-slate-500">Scan the office QR code</p>
+              </div>
+            </div>
 
-              {isProcessing ? (
-                <div className="flex flex-col items-center justify-center py-16">
-                  <div className="relative">
-                    <div className="w-16 h-16 rounded-full border-4 border-indigo-100" />
-                    <div className="absolute inset-0 w-16 h-16 rounded-full border-4 border-indigo-600 border-t-transparent animate-spin" />
-                  </div>
-                  <p className="mt-6 text-slate-600 font-medium">Processing your attendance...</p>
-                  <p className="mt-1 text-sm text-slate-400">Please wait a moment</p>
+            {isProcessing ? (
+              <div className="flex flex-col items-center justify-center py-16">
+                <div className="relative">
+                  <div className="w-16 h-16 rounded-full border-4 border-indigo-100" />
+                  <div className="absolute inset-0 w-16 h-16 rounded-full border-4 border-indigo-600 border-t-transparent animate-spin" />
                 </div>
-              ) : (
-                <QRScanner onScan={handleScan} onError={handleError} />
-              )}
-            </div>
-          ) : (
-            /* Completed State */
-            <div className="rounded-2xl bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-200 p-8 text-center">
-              <div className="mx-auto w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center mb-6">
-                <svg className="w-10 h-10 text-emerald-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+                <p className="mt-6 text-slate-600 font-medium">Processing your attendance...</p>
+                <p className="mt-1 text-sm text-slate-400">Please wait a moment</p>
               </div>
-              <h2 className="text-2xl font-bold text-slate-900 mb-2">All Done for Today!</h2>
-              <p className="text-slate-600 mb-6">
-                Great work! You&apos;ve completed your attendance for today.
-              </p>
-              <div className="inline-flex items-center gap-2 rounded-full bg-emerald-100 px-5 py-2.5 text-emerald-700 font-medium">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                Total: {calculateDuration(todayRecord!.checkInTime, todayRecord!.checkOutTime)}
-              </div>
-            </div>
-          )}
+            ) : (
+              <QRScanner onScan={handleScan} onError={handleError} />
+            )}
+          </div>
         </div>
 
         {/* Right Column - Today's Info */}

@@ -42,23 +42,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if already checked in today (using local timezone)
     const today = getLocalDate();
-    const existingRecord = await Attendance.findOne({
+
+    // Check if there's an open check-in (no check-out) for today
+    const openRecord = await Attendance.findOne({
       where: {
         userId: user.id,
         date: today,
+        checkOutTime: null,
       },
     });
 
-    if (existingRecord) {
+    if (openRecord) {
       return NextResponse.json(
-        { error: 'Already checked in today' },
+        { error: 'You have an open check-in. Please check out first.' },
         { status: 400 }
       );
     }
 
-    // Create attendance record
+    // Create new attendance record (allows multiple per day)
     const attendance = await Attendance.create({
       userId: user.id,
       checkInTime: new Date(),
@@ -71,15 +73,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (error: unknown) {
     console.error('Check-in error:', error);
-
-    // Handle unique constraint violation
-    if (error && typeof error === 'object' && 'name' in error && error.name === 'SequelizeUniqueConstraintError') {
-      return NextResponse.json(
-        { error: 'Already checked in today' },
-        { status: 400 }
-      );
-    }
-
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
