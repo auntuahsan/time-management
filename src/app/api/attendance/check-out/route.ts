@@ -2,6 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromRequest, verifyQRToken } from '@/lib/auth';
 import { Attendance, syncDatabase } from '@/lib/models';
 
+// Get today's date in local timezone (Asia/Dhaka)
+function getLocalDate(): string {
+  const now = new Date();
+  // Use Asia/Dhaka timezone (UTC+6)
+  const localDate = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Dhaka' }));
+  return localDate.toISOString().split('T')[0];
+}
+
 export async function POST(request: NextRequest) {
   try {
     await syncDatabase();
@@ -34,8 +42,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Find today's attendance record
-    const today = new Date().toISOString().split('T')[0];
+    // Find today's attendance record (using local timezone)
+    const today = getLocalDate();
     const attendance = await Attendance.findOne({
       where: {
         userId: user.id,
