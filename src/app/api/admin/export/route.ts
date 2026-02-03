@@ -22,6 +22,17 @@ function calculateDuration(checkIn: Date, checkOut: Date | null): string {
   return `${hours}h ${minutes}m`;
 }
 
+function getStatus(recordDate: string, checkOut: Date | null): string {
+  const today = new Date().toISOString().split('T')[0];
+  if (checkOut) {
+    return 'Complete';
+  } else if (recordDate === today) {
+    return 'In Progress';
+  } else {
+    return 'Incomplete';
+  }
+}
+
 function formatTime(date: Date | null): string {
   if (!date) return '-';
   return new Date(date).toLocaleTimeString('en-US', {
@@ -94,6 +105,7 @@ export async function GET(request: NextRequest) {
         'Check-in Time': formatTime(r.checkInTime),
         'Check-out Time': formatTime(r.checkOutTime),
         'Duration': calculateDuration(r.checkInTime, r.checkOutTime),
+        'Status': getStatus(r.date, r.checkOutTime),
       };
     });
 
@@ -109,6 +121,7 @@ export async function GET(request: NextRequest) {
       { wch: 15 }, // Check-in
       { wch: 15 }, // Check-out
       { wch: 12 }, // Duration
+      { wch: 12 }, // Status
     ];
 
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Attendance');

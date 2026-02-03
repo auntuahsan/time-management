@@ -9,7 +9,8 @@ export default function ScanPage() {
   const { token, user } = useAuth();
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [todayRecord, setTodayRecord] = useState<Attendance | null>(null);
+  const [todayRecords, setTodayRecords] = useState<Attendance[]>([]);
+  const [openRecord, setOpenRecord] = useState<Attendance | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -33,11 +34,12 @@ export default function ScanPage() {
       if (response.ok) {
         const data = await response.json();
         const today = new Date().toISOString().split('T')[0];
-        // Find the latest open record (no checkout) for today
-        const openRecord = data.records.find((r: Attendance) => r.date === today && !r.checkOutTime);
-        // If no open record, check if there's any record today (for display purposes)
-        const latestTodayRecord = data.records.find((r: Attendance) => r.date === today);
-        setTodayRecord(openRecord || latestTodayRecord || null);
+        // Get all records for today
+        const todaysRecords = data.records.filter((r: Attendance) => r.date === today);
+        setTodayRecords(todaysRecords);
+        // Find the open record (no checkout) for check-in/check-out logic
+        const currentOpenRecord = todaysRecords.find((r: Attendance) => !r.checkOutTime);
+        setOpenRecord(currentOpenRecord || null);
       }
     } catch (error) {
       console.error('Failed to fetch status:', error);
@@ -54,7 +56,7 @@ export default function ScanPage() {
 
     try {
       // Check if there's an open check-in (no checkout yet)
-      const hasOpenCheckin = todayRecord && !todayRecord.checkOutTime;
+      const hasOpenCheckin = openRecord !== null;
       const endpoint = hasOpenCheckin ? '/api/attendance/check-out' : '/api/attendance/check-in';
 
       const response = await fetch(endpoint, {
@@ -112,13 +114,13 @@ export default function ScanPage() {
   }
 
   // User is currently checked in if there's an open record (no checkout)
-  const isCheckedIn = todayRecord && !todayRecord.checkOutTime;
+  const isCheckedIn = openRecord !== null;
   // No longer have "completed" state - user can always check in again after checkout
 
   return (
     <div className="min-h-full">
       {/* Hero Section with Time */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 via-indigo-700 to-purple-700 p-8 mb-8">
+      <div className="relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-indigo-600 via-indigo-700 to-purple-700 p-4 sm:p-6 md:p-8 mb-4 sm:mb-6 md:mb-8">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-0 left-0 w-40 h-40 rounded-full bg-white blur-3xl" />
@@ -129,12 +131,12 @@ export default function ScanPage() {
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
             <div>
               <p className="text-indigo-200 text-sm font-medium mb-1">Welcome back,</p>
-              <h1 className="text-3xl font-bold text-white mb-2">{user?.username}</h1>
-              <p className="text-indigo-200">{formatDate(currentTime)}</p>
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-1 sm:mb-2">{user?.username}</h1>
+              <p className="text-indigo-200 text-sm sm:text-base">{formatDate(currentTime)}</p>
             </div>
             <div className="text-left md:text-right">
               <p className="text-indigo-200 text-sm mb-1">Current Time</p>
-              <p className="text-4xl md:text-5xl font-bold text-white font-mono tracking-tight">
+              <p className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white font-mono tracking-tight">
                 {formatTime(currentTime)}
               </p>
             </div>
@@ -152,19 +154,19 @@ export default function ScanPage() {
               }`} />
               {isCheckedIn ? 'Currently Working' : 'Ready to Check In'}
             </div>
-            {isCheckedIn && todayRecord && (
+            {isCheckedIn && openRecord && (
               <div className="inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-2 text-sm font-medium text-white">
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                {calculateDuration(todayRecord.checkInTime, todayRecord.checkOutTime)}
+                {calculateDuration(openRecord.checkInTime, openRecord.checkOutTime)}
               </div>
             )}
           </div>
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
         {/* Left Column - Scanner */}
         <div className="lg:col-span-2">
           {/* Message Alert */}
@@ -239,64 +241,58 @@ export default function ScanPage() {
               Today&apos;s Attendance
             </h3>
 
-            {todayRecord ? (
-              <div className="space-y-4">
-                {/* Check In */}
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center">
-                    <svg className="w-6 h-6 text-emerald-600" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-500 uppercase tracking-wider">Check In</p>
-                    <p className="text-xl font-bold text-slate-900">
-                      {new Date(todayRecord.checkInTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Divider */}
-                <div className="border-t border-dashed border-slate-200" />
-
-                {/* Check Out */}
-                <div className="flex items-center gap-4">
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                    todayRecord.checkOutTime ? 'bg-red-100' : 'bg-slate-100'
-                  }`}>
-                    <svg className={`w-6 h-6 ${todayRecord.checkOutTime ? 'text-red-600' : 'text-slate-400'}`} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-500 uppercase tracking-wider">Check Out</p>
-                    <p className={`text-xl font-bold ${todayRecord.checkOutTime ? 'text-slate-900' : 'text-slate-300'}`}>
-                      {todayRecord.checkOutTime
-                        ? new Date(todayRecord.checkOutTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
-                        : '--:--'}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Duration */}
-                {todayRecord.checkOutTime && (
-                  <>
-                    <div className="border-t border-dashed border-slate-200" />
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-indigo-100 flex items-center justify-center">
-                        <svg className="w-6 h-6 text-indigo-600" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                      </div>
-                      <div>
-                        <p className="text-xs text-slate-500 uppercase tracking-wider">Total Duration</p>
-                        <p className="text-xl font-bold text-indigo-600">
-                          {calculateDuration(todayRecord.checkInTime, todayRecord.checkOutTime)}
-                        </p>
-                      </div>
+            {todayRecords.length > 0 ? (
+              <div className="space-y-4 max-h-80 overflow-y-auto">
+                {todayRecords.map((record, index) => (
+                  <div key={record.id} className="space-y-3">
+                    {index > 0 && <div className="border-t border-slate-200 pt-4" />}
+                    <div className="flex items-center justify-between text-xs text-slate-400 uppercase tracking-wider">
+                      <span>Session {todayRecords.length - index}</span>
+                      {!record.checkOutTime && (
+                        <span className="text-emerald-600 font-medium">Active</span>
+                      )}
                     </div>
-                  </>
-                )}
+                    <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 sm:gap-3">
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                          <svg className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
+                          </svg>
+                        </div>
+                        <div>
+                          <p className="text-xs text-slate-500">In</p>
+                          <p className="text-base sm:text-lg font-bold text-slate-900">
+                            {new Date(record.checkInTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-slate-300 hidden sm:block">→</div>
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${record.checkOutTime ? 'bg-red-100' : 'bg-slate-100'}`}>
+                          <svg className={`w-4 h-4 sm:w-5 sm:h-5 ${record.checkOutTime ? 'text-red-600' : 'text-slate-400'}`} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+                          </svg>
+                        </div>
+                        <div>
+                          <p className="text-xs text-slate-500">Out</p>
+                          <p className={`text-base sm:text-lg font-bold ${record.checkOutTime ? 'text-slate-900' : 'text-slate-300'}`}>
+                            {record.checkOutTime
+                              ? new Date(record.checkOutTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+                              : '--:--'}
+                          </p>
+                        </div>
+                      </div>
+                      {record.checkOutTime && (
+                        <div className="w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 mt-2 sm:mt-0 text-left sm:text-right">
+                          <p className="text-xs text-slate-500">Duration</p>
+                          <p className="text-sm font-semibold text-indigo-600">
+                            {calculateDuration(record.checkInTime, record.checkOutTime)}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : (
               <div className="text-center py-8">

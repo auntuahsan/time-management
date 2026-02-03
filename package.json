@@ -9,7 +9,11 @@
     "start": "next start -p 4000",
     "start:custom": "NODE_ENV=production tsx server.ts",
     "lint": "next lint",
-    "seed": "tsx scripts/seed.ts"
+    "seed": "tsx scripts/seed.ts",
+    "migrate": "sequelize-cli db:migrate",
+    "migrate:undo": "sequelize-cli db:migrate:undo",
+    "migrate:run": "tsx scripts/run-migrations.ts",
+    "db:check": "tsx scripts/check-constraints.ts"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
@@ -36,6 +40,7 @@
     "eslint": "^8.57.0",
     "eslint-config-next": "14.2.3",
     "postcss": "^8.4.38",
+    "sequelize-cli": "^6.6.5",
     "tailwindcss": "^3.4.3",
     "tsx": "^4.21.0",
     "typescript": "^5.4.5"

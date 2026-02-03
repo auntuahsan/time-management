@@ -342,11 +342,29 @@ export default function ReportPage() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600 font-medium">{formatTime(record.checkOutTime)}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">{calculateDuration(record.checkInTime, record.checkOutTime)}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                        record.checkOutTime ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
-                      }`}>
-                        {record.checkOutTime ? 'Complete' : 'In Progress'}
-                      </span>
+                      {(() => {
+                        const today = new Date().toISOString().split('T')[0];
+                        const isToday = record.date === today;
+                        if (record.checkOutTime) {
+                          return (
+                            <span className="inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium bg-emerald-100 text-emerald-700">
+                              Complete
+                            </span>
+                          );
+                        } else if (isToday) {
+                          return (
+                            <span className="inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium bg-amber-100 text-amber-700">
+                              In Progress
+                            </span>
+                          );
+                        } else {
+                          return (
+                            <span className="inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium bg-red-100 text-red-700">
+                              Incomplete
+                            </span>
+                          );
+                        }
+                      })()}
                     </td>
                   </tr>
                 ))}

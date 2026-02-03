@@ -8,7 +8,8 @@ import Link from 'next/link';
 
 export default function DashboardPage() {
   const { user, token } = useAuth();
-  const [todayRecord, setTodayRecord] = useState<Attendance | null>(null);
+  const [todayRecords, setTodayRecords] = useState<Attendance[]>([]);
+  const [openRecord, setOpenRecord] = useState<Attendance | null>(null);
   const [history, setHistory] = useState<Attendance[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [stats, setStats] = useState({
@@ -36,10 +37,13 @@ export default function DashboardPage() {
         const data = await response.json();
         setHistory(data.records);
 
-        // Find today's record
+        // Find all today's records
         const today = new Date().toISOString().split('T')[0];
-        const todayRec = data.records.find((r: Attendance) => r.date === today);
-        setTodayRecord(todayRec || null);
+        const todaysRecords = data.records.filter((r: Attendance) => r.date === today);
+        setTodayRecords(todaysRecords);
+        // Find open record (no checkout) for status logic
+        const currentOpenRecord = todaysRecords.find((r: Attendance) => !r.checkOutTime);
+        setOpenRecord(currentOpenRecord || null);
 
         // Calculate stats
         const thisMonth = data.records.filter((r: Attendance) => {
@@ -79,24 +83,24 @@ export default function DashboardPage() {
   };
 
   const getStatusInfo = () => {
-    if (!todayRecord) {
+    if (todayRecords.length === 0) {
       return {
         status: 'Not Checked In',
         color: 'bg-slate-100 text-slate-700',
         message: 'Start your day by scanning the QR code',
       };
     }
-    if (todayRecord.checkOutTime) {
+    if (openRecord) {
       return {
-        status: 'Day Complete',
-        color: 'bg-emerald-100 text-emerald-700',
-        message: 'Great job! See you tomorrow',
+        status: 'Working',
+        color: 'bg-blue-100 text-blue-700',
+        message: 'Remember to check out when leaving',
       };
     }
     return {
-      status: 'Working',
-      color: 'bg-blue-100 text-blue-700',
-      message: 'Remember to check out when leaving',
+      status: 'Day Complete',
+      color: 'bg-emerald-100 text-emerald-700',
+      message: `${todayRecords.length} session${todayRecords.length > 1 ? 's' : ''} completed today`,
     };
   };
 
@@ -213,38 +217,43 @@ export default function DashboardPage() {
             </span>
             <p className="mt-3 text-sm text-slate-500">{statusInfo.message}</p>
 
-            {todayRecord && (
-              <div className="mt-4 space-y-3 border-t border-slate-100 pt-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-slate-500">Check-in</span>
-                  <span className="text-sm font-medium text-slate-900">{formatTime(todayRecord.checkInTime)}</span>
-                </div>
-                {todayRecord.checkOutTime && (
-                  <>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-slate-500">Check-out</span>
-                      <span className="text-sm font-medium text-slate-900">{formatTime(todayRecord.checkOutTime)}</span>
+            {todayRecords.length > 0 && (
+              <div className="mt-4 space-y-3 border-t border-slate-100 pt-4 max-h-48 overflow-y-auto">
+                {todayRecords.map((record, index) => (
+                  <div key={record.id} className="space-y-2">
+                    {index > 0 && <div className="border-t border-slate-100 pt-2" />}
+                    <div className="flex items-center justify-between text-xs text-slate-400">
+                      <span>Session {todayRecords.length - index}</span>
+                      {!record.checkOutTime && <span className="text-emerald-600 font-medium">Active</span>}
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-slate-500">Duration</span>
-                      <span className="text-sm font-medium text-indigo-600">
-                        {calculateDuration(todayRecord.checkInTime, todayRecord.checkOutTime)}
+                      <span className="text-sm text-slate-500">In</span>
+                      <span className="text-sm font-medium text-emerald-600">{formatTime(record.checkInTime)}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-slate-500">Out</span>
+                      <span className="text-sm font-medium text-red-600">
+                        {record.checkOutTime ? formatTime(record.checkOutTime) : '--:--'}
                       </span>
                     </div>
-                  </>
-                )}
+                    {record.checkOutTime && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-slate-500">Duration</span>
+                        <span className="text-sm font-medium text-indigo-600">
+                          {calculateDuration(record.checkInTime, record.checkOutTime)}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
             )}
 
             <Link
               href="/scan"
-              className={`mt-4 flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
-                todayRecord?.checkOutTime
-                  ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                  : 'bg-indigo-600 text-white hover:bg-indigo-700'
-              }`}
+              className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors bg-indigo-600 text-white hover:bg-indigo-700"
             >
-              {!todayRecord ? 'Check In' : todayRecord.checkOutTime ? 'Completed' : 'Check Out'}
+              {todayRecords.length === 0 ? 'Check In' : openRecord ? 'Check Out' : 'Check In Again'}
             </Link>
           </div>
         </div>
@@ -278,15 +287,29 @@ export default function DashboardPage() {
                       {calculateDuration(record.checkInTime, record.checkOutTime)}
                     </td>
                     <td className="py-3">
-                      <span
-                        className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
-                          record.checkOutTime
-                            ? 'bg-emerald-100 text-emerald-700'
-                            : 'bg-amber-100 text-amber-700'
-                        }`}
-                      >
-                        {record.checkOutTime ? 'Complete' : 'In Progress'}
-                      </span>
+                      {(() => {
+                        const today = new Date().toISOString().split('T')[0];
+                        const isToday = record.date === today;
+                        if (record.checkOutTime) {
+                          return (
+                            <span className="inline-flex rounded-full px-2 py-0.5 text-xs font-medium bg-emerald-100 text-emerald-700">
+                              Complete
+                            </span>
+                          );
+                        } else if (isToday) {
+                          return (
+                            <span className="inline-flex rounded-full px-2 py-0.5 text-xs font-medium bg-amber-100 text-amber-700">
+                              In Progress
+                            </span>
+                          );
+                        } else {
+                          return (
+                            <span className="inline-flex rounded-full px-2 py-0.5 text-xs font-medium bg-red-100 text-red-700">
+                              Incomplete
+                            </span>
+                          );
+                        }
+                      })()}
                     </td>
                   </tr>
                 ))}
