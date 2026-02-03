@@ -53,7 +53,9 @@ export default function ScanPage() {
     setMessage(null);
 
     try {
-      const endpoint = !todayRecord ? '/api/attendance/check-in' : '/api/attendance/check-out';
+      // Check if there's an open check-in (no checkout yet)
+      const hasOpenCheckin = todayRecord && !todayRecord.checkOutTime;
+      const endpoint = hasOpenCheckin ? '/api/attendance/check-out' : '/api/attendance/check-in';
 
       const response = await fetch(endpoint, {
         method: 'POST',
